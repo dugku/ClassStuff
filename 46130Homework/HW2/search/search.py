@@ -89,6 +89,7 @@ def depthFirstSearch(problem):
     """
     "*** YOUR CODE HERE ***"
     from game import Directions
+    print("In DFS")
     s = util.Stack()
     start = problem.getStartState()
 
@@ -108,9 +109,7 @@ def depthFirstSearch(problem):
             return path
 
         for n, a, _ in problem.getSuccessors(state):
-            print(state)
             if problem.isWall(n):
-                print(wh, "End")
                 next = (n, wh+1)
             else:
                 next = (n, wh)
@@ -123,6 +122,7 @@ def depthFirstSearch(problem):
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
+    "*** YOUR CODE HERE ***"
     q = util.Queue()
     start = problem.getStartState()
 
@@ -137,9 +137,9 @@ def breadthFirstSearch(problem):
 
         if wh > 2:
             continue
-        print(wh)
 
-        if problem.isGoalState(state) and wh > 0:
+        if problem.isGoalState(state) and wh >= 0:
+            print(True)
             return path
 
         for n, a, _ in problem.getSuccessors(state):
@@ -149,7 +149,7 @@ def breadthFirstSearch(problem):
             else:
                 next = (n, wh)
             if n not in visited:
-                visited.add(n)   
+                visited.add(n)            
                 q.push((next[0], next[1], path + [a]))
 
     return []

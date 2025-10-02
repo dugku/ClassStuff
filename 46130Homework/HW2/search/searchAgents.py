@@ -204,7 +204,7 @@ class PositionSearchProblem(search.SearchProblem):
             x,y = state
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
-            if 0 <= nextx < self.walls.width and 0 <= nexty < self.walls.height: #and not self.walls[nextx][nexty]:
+            if 0 <= nextx < self.walls.width and 0 <= nexty < self.walls.height and not self.walls[nextx][nexty]:
                 nextState = (nextx, nexty)
                 cost = self.costFn(nextState)
                 successors.append((nextState, action, cost))
@@ -407,8 +407,8 @@ def cornersHeuristic(state, problem):
     "*** YOUR CODE HERE ***"
     cornerSt=state[1]
     dist=0
-    for corner in cornerSt:                                                     #We are using the same way manhattanheuristic does just for
-        pos=state[0]                                                            #the corners now to find the distance
+    for corner in cornerSt:                                                     
+        pos=state[0]                                                            
         cPos=corner[0]
         if corner[1] is False:
             dist=max(dist,(abs(cPos[0]-pos[0])+abs(cPos[1]-pos[1])))
@@ -509,36 +509,30 @@ def foodHeuristic(state, problem):
     problem.heuristicInfo['wallCount']
     """
     "*** YOUR CODE HERE ***"
-    pos, foodGrid = state
-    food_list = foodGrid.asList()
-    if not food_list:
-        return 0
-
-    info = problem.heuristicInfo
-    if 'md' not in info:
-        info['md'] = {}  # (p1,p2) -> distance
-
-    def md(a, b):
-        key = (a, b) if a <= b else (b, a)
-        if key not in info['md']:
-            info['md'][key] = mazeDistance(a, b, problem.startingGameState)
-        return info['md'][key]
-
-    # Max distance from Pacman to any remaining food
-    return max(md(pos, f) for f in food_list)
-
-    # Max distance from Pacman to any remaining food
-    return max(md(pos, f) for f in food_list)
+    pos,food=state
+    foodpos=food.asList()
+    fcost=[0]*len(foodpos)
+    if len(foodpos)==0:                                                 
+        return 0                                                         
+    for i in range(len(foodpos)):                                        
+        fcost[i]=mazeDistance(pos,foodpos[i],problem.startingGameState)   
+    Max=max(fcost)
+    return Max
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
     def registerInitialState(self, state):
         self.actions = []
         currentState = state
+        self.numHits = 0
         while(currentState.getFood().count() > 0):
             nextPathSegment = self.findPathToClosestDot(currentState) # The missing piece
             self.actions += nextPathSegment
             for action in nextPathSegment:
+                legal = currentState.getLegalActions()
+                if action not in legal:
+                    t = (str(action), str(currentState))
+                    raise Exception('findPathToClosestDot returned an illegal move: %s!\n%s' % t)
                 currentState = currentState.generateSuccessor(0, action)
         self.actionIndex = 0
         print('Path found with cost %d.' % len(self.actions))
@@ -553,11 +547,8 @@ class ClosestDotSearchAgent(SearchAgent):
         food = gameState.getFood()
         walls = gameState.getWalls()
         problem = AnyFoodSearchProblem(gameState)
-
         "*** YOUR CODE HERE ***"
-        actions=search.bfs(problem)
-        return actions
-        util.raiseNotDefined()
+        return  search.bfs(problem)
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
@@ -593,10 +584,8 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         x,y = state
 
         "*** YOUR CODE HERE ***"
-        foodList=self.food.asList()
-        distance,food=min([(util.manhattanDistance(state,food),food)for food in foodList])
-        isGoal=state==food                                                                    #And in this function we examine if we are in goal state
-        return isGoal      
+        #print(self.food[x][y])
+        return self.food[x][y]
 
 def mazeDistance(point1, point2, gameState):
     """
